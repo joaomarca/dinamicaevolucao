@@ -4,9 +4,11 @@ import java.util.ArrayList;
 
 public class ProcessadorDeVendas {
 
-    // VIOLAÇÃO DE DIP (Dependência de classe concreta). 
-    // Isso deve ser substituído pela Interface EstrategiaFrete injetada via construtor!
-    private CalculadoraFrete calculadoraFrete = new CalculadoraFrete();
+    private EstrategiaFrete estrategiaFrete;
+
+    public ProcessadorDeVendas(EstrategiaFrete estrategiaFrete) {
+        this.estrategiaFrete = estrategiaFrete;
+    }
 
     public void processar(Cliente cliente, List<Item> itens) {
         System.out.println("Iniciando processamento...");
@@ -20,7 +22,7 @@ public class ProcessadorDeVendas {
         double impostos = calcularImpostos(itens);
 
         // Aqui o Strategy será acionado no futuro:
-        double frete = calculadoraFrete.calcular(cliente);
+        double frete = estrategiaFrete.calcularFrete(cliente);
 
         double totalFinal = subtotal + impostos + frete;
         imprimirRecibo(cliente, subtotal, impostos, frete, totalFinal);
@@ -70,9 +72,17 @@ public class ProcessadorDeVendas {
         itens.add(new Item(150.0, 1));
         itens.add(new Item(30.0, 3));
 
-        ProcessadorDeVendas processador = new ProcessadorDeVendas();
+        EstrategiaFrete estrategia;
+        if (cliente.getTipoCliente() == 1) {
+            estrategia = new FreteVipStrategy();
+        } else if (cliente.getEstado().equalsIgnoreCase("SP")) {
+                estrategia = new FreteSudesteStrategy();
+            } else {
+                estrategia = new FreteNacionalStrategy();
+        }
 
-        // Na sua refatoração, a estratégia será injetada no processador!
+        ProcessadorDeVendas processador = new ProcessadorDeVendas(estrategia);
+
         processador.processar(cliente, itens);
     }
 }
